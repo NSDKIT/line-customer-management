@@ -1,0 +1,33 @@
+python-3.11.7
+```
+
+### **3. Procfile**
+```
+web: gunicorn app:app --log-file -
+```
+
+### **4. .gitignore**
+```
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+
+# 環境変数
+.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# ログ
+*.log
