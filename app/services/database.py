@@ -8,15 +8,18 @@ logger = logging.getLogger(__name__)
 
 class Database:
     _instance = None
+    _initialized = False
     
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super(Database, cls).__new__(cls)
-            cls._instance._initialize()
         return cls._instance
     
     def _initialize(self):
-        """PostgreSQL接続の初期化（SSL強制）"""
+        """PostgreSQL接続パラメータの初期化（接続テストなし）"""
+        if self._initialized:
+            return
+            
         try:
             # Supabase URLからproject_idを抽出
             project_id = Config.SUPABASE_URL.replace('https://', '').replace('.supabase.co', '')
@@ -27,24 +30,27 @@ class Database:
                 'user': 'postgres',
                 'password': Config.SUPABASE_PASSWORD,
                 'port': 5432,
-                'sslmode': 'require',  # SSL接続を強制
+                'sslmode': 'require',
                 'connect_timeout': 10
             }
             
-            # 接続テスト
-            conn = self._get_connection()
-            conn.close()
-            logger.info("PostgreSQL connection established with SSL")
+            self._initialized = True
+            logger.info("PostgreSQL connection parameters configured")
         except Exception as e:
-            logger.error(f"Failed to connect to PostgreSQL: {e}")
+            logger.error(f"Failed to configure PostgreSQL parameters: {e}")
             raise
     
     def _get_connection(self):
         """新しい接続を取得"""
+        if not self._initialized:
+            self._initialize()
         return psycopg2.connect(**self.conn_params, cursor_factory=RealDictCursor)
     
     def execute_query(self, query: str, params: tuple = None) -> List[Dict]:
         """SELECT クエリを実行"""
+        if not self._initialized:
+            self._initialize()
+            
         conn = None
         cursor = None
         try:
@@ -64,6 +70,9 @@ class Database:
     
     def execute_insert(self, query: str, params: tuple = None) -> Optional[Dict]:
         """INSERT クエリを実行"""
+        if not self._initialized:
+            self._initialize()
+            
         conn = None
         cursor = None
         try:
@@ -89,6 +98,9 @@ class Database:
     
     def execute_update(self, query: str, params: tuple = None) -> int:
         """UPDATE クエリを実行"""
+        if not self._initialized:
+            self._initialize()
+            
         conn = None
         cursor = None
         try:
