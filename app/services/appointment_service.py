@@ -6,14 +6,28 @@ logger = logging.getLogger(__name__)
 
 class AppointmentService:
     def __init__(self):
-        self.supabase = db.get_client()
+        self.db = db
     
     def create_appointment(self, data: Dict) -> Optional[Dict]:
         """商談記録を作成"""
         try:
-            response = self.supabase.table('appointments').insert(data).execute()
+            query = """
+                INSERT INTO appointments 
+                (date, time, client, appointment_detail, sys_user_id, sys_conversation_id)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING *
+            """
+            params = (
+                data.get('date'),
+                data.get('time'),
+                data.get('client'),
+                data.get('appointment_detail'),
+                data.get('sys_user_id'),
+                data.get('sys_conversation_id')
+            )
+            result = self.db.execute_insert(query, params)
             logger.info(f"Appointment created for client: {data.get('client')}")
-            return response.data[0] if response.data else None
+            return result
         except Exception as e:
             logger.error(f"Error creating appointment: {e}")
             return None
@@ -21,33 +35,25 @@ class AppointmentService:
     def get_appointments(self, conversation_id: str, client_name: str = None) -> List[Dict]:
         """商談履歴を取得"""
         try:
-            query = self.supabase.table('appointments')\
-                .select("*")\
-                .eq('sys_conversation_id', conversation_id)
-            
             if client_name:
-                query = query.eq('client', client_name)
+                query = """
+                    SELECT * FROM appointments
+                    WHERE sys_conversation_id = %s AND client = %s
+                    ORDER BY created_at DESC
+                """
+                results = self.db.execute_query(query, (conversation_id, client_name))
+            else:
+                query = """
+                    SELECT * FROM appointments
+                    WHERE sys_conversation_id = %s
+                    ORDER BY created_at DESC
+                """
+                results = self.db.execute_query(query, (conversation_id,))
             
-            response = query.order('created_at', desc=True).execute()
-            return response.data if response.data else []
+            return results
         except Exception as e:
             logger.error(f"Error getting appointments: {e}")
             return []
-    
-    def get_latest_appointment(self, conversation_id: str, client_name: str) -> Optional[Dict]:
-        """最新の商談記録を取得"""
-        try:
-            response = self.supabase.table('appointments')\
-                .select("*")\
-                .eq('sys_conversation_id', conversation_id)\
-                .eq('client', client_name)\
-                .order('created_at', desc=True)\
-                .limit(1)\
-                .execute()
-            return response.data[0] if response.data else None
-        except Exception as e:
-            logger.error(f"Error getting latest appointment: {e}")
-            return None
 
 # シングルトンインスタンス
 appointment_service = AppointmentService()

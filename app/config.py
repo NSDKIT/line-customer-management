@@ -11,6 +11,7 @@ class Config:
     # Supabase設定
     SUPABASE_URL = os.getenv('SUPABASE_URL')
     SUPABASE_KEY = os.getenv('SUPABASE_KEY')
+    SUPABASE_PASSWORD = os.getenv('SUPABASE_PASSWORD')  # この行があることを確認
     
     # AI API設定
     ANTHROPIC_API_KEY = os.getenv('ANTHROPIC_API_KEY')
@@ -27,7 +28,7 @@ class Config:
             'LINE_CHANNEL_SECRET',
             'LINE_CHANNEL_ACCESS_TOKEN',
             'SUPABASE_URL',
-            'SUPABASE_KEY',
+            'SUPABASE_PASSWORD',
             'ANTHROPIC_API_KEY',
             'OPENAI_API_KEY'
         ]

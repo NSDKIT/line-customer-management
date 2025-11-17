@@ -10,8 +10,16 @@ logger = logging.getLogger(__name__)
 class AIHandler:
     def __init__(self):
         try:
-            self.anthropic = Anthropic(api_key=Config.ANTHROPIC_API_KEY)
-            self.openai = OpenAI(api_key=Config.OPENAI_API_KEY)
+            # Anthropic クライアント初期化（シンプル版）
+            self.anthropic = Anthropic(
+                api_key=Config.ANTHROPIC_API_KEY
+            )
+            
+            # OpenAI クライアント初期化
+            self.openai = OpenAI(
+                api_key=Config.OPENAI_API_KEY
+            )
+            
             logger.info("AI clients initialized successfully")
         except Exception as e:
             logger.error(f"Failed to initialize AI clients: {e}")
