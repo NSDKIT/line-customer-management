@@ -51,24 +51,28 @@ def process_message(user_id: str, message: str) -> str:
     
     session = get_session(user_id)
     number = session.get('number', 0)
+    handle_type = session.get('handle_type', '0')
     
     # 初期化コマンド（記録・履歴）
     if '記録' in message or '履歴' in message:
         return handle_initial_command(user_id, message)
     
-    # フロー処理
-    if number == 1:
-        return handle_date_input(user_id, message, session)
-    elif number == 2:
-        return handle_time_input(user_id, message, session)
-    elif number == 3:
-        return handle_customer_input(user_id, message, session)
-    elif number == 4:
-        return handle_appointment_detail_input(user_id, message, session)
-    elif number == 0 and message in ['1', '2', '3', '4', '5']:
-        return handle_confirmation_choice(user_id, message, session)
-    elif session.get('handle_type') == '2' and number == 1:
+    # 履歴モードでの顧客ID入力
+    if handle_type == '2' and number == 1:
         return handle_history_customer_selection(user_id, message)
+    
+    # 記録モードのフロー処理
+    if handle_type == '1':
+        if number == 1:
+            return handle_date_input(user_id, message, session)
+        elif number == 2:
+            return handle_time_input(user_id, message, session)
+        elif number == 3:
+            return handle_customer_input(user_id, message, session)
+        elif number == 4:
+            return handle_appointment_detail_input(user_id, message, session)
+        elif number == 0 and message in ['1', '2', '3', '4', '5']:
+            return handle_confirmation_choice(user_id, message, session)
     
     # デフォルト応答
     return "「記録」または「履歴」を入力してください。"
